@@ -1,0 +1,75 @@
+name: Build Discord Updater Binary
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+        type: string
+
+# Estos permisos son necesarios para crear la Release
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build on Ubuntu
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10' # 3.10 es muy estable para PyInstaller
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          # Si usas PySide6, a veces hace falta instalarlo explícitamente si no está en requirements
+          # pip install PySide6 
+
+      - name: Build with PyInstaller
+        # --windowed: No abre consola negra
+        # --onefile: Crea un solo archivo
+        run: |
+          pyinstaller --noconfirm --onefile --windowed --clean --name discord-updater-desktop discord-updater-desktop.py
+
+      - name: Verify Build
+        run: |
+          echo "Verificando contenido de dist/..."
+          ls -la dist/
+          file dist/discord-updater-desktop
+
+      # ESTE PASO SUBE EL ARCHIVO COMO ARTIFACT (Disponible en el resumen del Action)
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: discord-updater-binary
+          path: dist/discord-updater-desktop
+          retention-days: 5
+
+      # ESTE PASO CREA LA RELEASE (Opcional, publica en Releases)
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: ${{ inputs.version }}
+          name: Discord Updater ${{ inputs.version }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/discord-updater-desktop
+          body: |
+            ## Instalación en Linux
+            1. Descarga el archivo `discord-updater-desktop`.
+            2. Dale permisos de ejecución: `chmod +x discord-updater-desktop`
+            3. Ejecútalo.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
