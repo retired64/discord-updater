@@ -53,3 +53,16 @@ Asegúrate de que el archivo tenga permisos de ejecución:
 ```bash
 chmod +x DiscordUpdater-x86_64.AppImage
 ```
+
+---
+
+### ⚙️ Nota para usuarios de Gear Lever
+
+Si utilizas **Gear Lever** para gestionar tus AppImages, es posible que recibas una advertencia indicando que el archivo es **"Inseguro"** o que **"Faltan metadatos"**.
+
+Esto es normal, ya que esta aplicación es una herramienta local y no incluye una firma digital corporativa. Para integrarla correctamente:
+
+1. Abre las **Preferencias** de Gear Lever.
+2. Busca la sección de seguridad o validación.
+3. Desactiva la opción de **"Verificar metadatos"** o activa **"Permitir AppImages sin firmar"**.
+4. Arrastra el archivo de nuevo y se integrará sin problemas.
