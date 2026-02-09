@@ -22,7 +22,10 @@ Una herramienta diseñada para integrar y mantener Discord actualizado en el sis
 
 </div>
 
-![Discord Update Linux](src/img/546908112-03e3e6b8-8a8e-4122-a301-1760972d8473.png)
+<p align="center">
+  <img src="src/img/546908112-03e3e6b8-8a8e-4122-a301-1760972d8473.png" alt="Discord Update Linux">
+</p>
+
 
 ---
 
@@ -182,6 +185,14 @@ Para integrarla correctamente:
 2. Accede a la sección de seguridad o validación.
 3. Desactiva la verificación estricta de metadatos o habilita la opción para permitir AppImages sin firmar.
 4. Vuelve a arrastrar el archivo para completar la integración.
+
+## ERROR
+<img width="465" height="259" alt="Captura desde 2026-02-09 10-58-44" src="https://github.com/user-attachments/assets/23166410-2ba2-4be5-88cf-8db288fae978" />
+
+## SOLUCION
+- Desactivar esta opcion (tal vez a futuro actualice correctamente los metadatos para actualizaciones automaticas dentro del mismo appimage y firmado, mientras esta es una solucion temporal)
+<img width="627" height="146" alt="Captura desde 2026-02-09 10-55-15" src="https://github.com/user-attachments/assets/1005b6b9-6340-4167-b562-d16fe64fd050" />
+
 
 ---
 
