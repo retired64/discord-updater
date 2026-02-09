@@ -1,5 +1,6 @@
 <div align="center">
   <img src="icon.png" alt="Discord Updater Logo" width="120" height="120">
+  <img src="546908112-03e3e6b8-8a8e-4122-a301-1760972d8473.png" alt="Discord Updater Logo" width="120" height="120">
   
   # DiscordUpdate-TarGZ
   
