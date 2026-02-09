@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Discord Update - Actualizador automático de Discord para Linux. Mantén Discord actualizado sin fricción en Fedora, Arch, Debian y más.">
+    <meta name="keywords" content="Discord, Linux, Actualizador, AppImage, Fedora, Arch, Debian, Open Source">
+    <title>Discord Update | Actualizador Automático para Linux</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* --- VARIABLES & RESET --- */
+        :root {
+            --primary: #5865F2;
+            --primary-dark: #4752C4;
+            --primary-light: #7289DA;
+            --success: #57F287;
+            --danger: #ED4245;
+            --warning: #FEE75C;
+            
+            --bg-darker: #0a0c0f;
+            --bg-dark: #1a1c1f;
+            --bg-card: #23272A;
+            --bg-elevated: #2C2F33;
+            
+            --text-primary: #FFFFFF;
+            --text-secondary: #B9BBBE;
+            --text-muted: #72767d;
+            
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-medium: rgba(255, 255, 255, 0.12);
+            
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --shadow-xl: 0 16px 64px rgba(0, 0, 0, 0.5);
+            
+            --glow-primary: 0 0 40px rgba(88, 101, 242, 0.3);
+            --glow-success: 0 0 40px rgba(87, 242, 135, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--bg-darker);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        code, pre, .mono {
+            font-family: 'JetBrains Mono', 'Space Mono', monospace;
+        }
+
+        /* --- ANIMATED BACKGROUND --- */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: 
+                radial-gradient(ellipse at top, rgba(88, 101, 242, 0.15), transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(87, 242, 135, 0.08), transparent 50%),
+                radial-gradient(ellipse at bottom left, rgba(237, 66, 69, 0.05), transparent 50%);
+            animation: gradientShift 20s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-image: 
+                linear-gradient(rgba(88, 101, 242, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(88, 101, 242, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: radial-gradient(ellipse at center, black 0%, transparent 80%);
+        }
+
+        /* --- UTILITIES --- */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 clamp(20px, 5vw, 60px);
+        }
+
+        .container-narrow {
+            max-width: 900px;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .text-glow {
+            text-shadow: 0 0 30px rgba(88, 101, 242, 0.5);
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 20px 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        nav.scrolled {
+            background: rgba(26, 28, 31, 0.9);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: transform 0.3s;
+        }
+
+        .logo:hover {
+            transform: translateY(-2px);
+        }
+
+        .logo i {
+            font-size: 1.8rem;
+            color: var(--primary);
+            filter: drop-shadow(var(--glow-primary));
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 35px;
+            list-style: none;
+        }
+
+        .nav-menu a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .nav-menu a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-menu a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+
+        .nav-menu a:hover::after {
+            width: 100%;
+        }
+
+        .nav-cta {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: var(--shadow-sm), var(--glow-primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md), 0 0 50px rgba(88, 101, 242, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 2px solid var(--border-medium);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            background: rgba(88, 101, 242, 0.1);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+        }
+
+        .btn-ghost:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Mobile menu toggle */
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .menu-toggle span {
+            width: 25px;
+            height: 3px;
+            background: var(--text-primary);
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 0 60px;
+            position: relative;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            background: rgba(88, 101, 242, 0.1);
+            border: 1px solid rgba(88, 101, 242, 0.3);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary-light);
+            margin-bottom: 30px;
+            animation: fadeInUp 1s ease-out 0.2s backwards;
+        }
+
+        .hero-badge i {
+            color: var(--success);
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 7vw, 5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 25px;
+            letter-spacing: -0.02em;
+            animation: fadeInUp 1s ease-out 0.3s backwards;
+        }
+
+        .hero .subtitle {
+            font-size: clamp(1.1rem, 2vw, 1.4rem);
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            line-height: 1.6;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeInUp 1s ease-out 0.4s backwards;
+        }
+
+        .hero-cta {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            animation: fadeInUp 1s ease-out 0.5s backwards;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border-subtle);
+            animation: fadeInUp 1s ease-out 0.6s backwards;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* --- FEATURES SECTION --- */
+        .section {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 80px;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+        }
+
+        .section-description {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid var(--border-subtle);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(88, 101, 242, 0.1) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg), var(--glow-primary);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(88, 101, 242, 0.15);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            transition: all 0.4s;
+        }
+
+        .feature-card:hover .feature-icon {
+            background: var(--primary);
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .feature-icon i {
+            font-size: 1.8rem;
+            color: var(--primary);
+            transition: color 0.4s;
+        }
+
+        .feature-card:hover .feature-icon i {
+            color: white;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* --- HOW IT WORKS --- */
+        .steps-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .step {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 30px;
+            margin-bottom: 60px;
+            position: relative;
+        }
+
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 39px;
+            top: 80px;
+            width: 2px;
+            height: calc(100% - 80px + 60px);
+            background: linear-gradient(180deg, var(--primary) 0%, transparent 100%);
+        }
+
+        .step-number {
+            width: 80px;
+            height: 80px;
+            background: var(--bg-card);
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            position: relative;
+            z-index: 2;
+            transition: all 0.4s;
+        }
+
+        .step:hover .step-number {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: var(--glow-primary);
+        }
+
+        .step-content h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .step-content p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            font-size: 1.1rem;
+        }
+
+        .step-content code {
+            display: inline-block;
+            background: var(--bg-elevated);
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            color: var(--success);
+            border: 1px solid var(--border-subtle);
+        }
+
+        /* --- COMPATIBILITY --- */
+        .compatibility-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 50px;
+        }
+
+        .distro-card {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid var(--border-subtle);
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .distro-card:hover {
+            border-color: var(--success);
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .distro-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            filter: grayscale(0.3);
+            transition: filter 0.3s;
+        }
+
+        .distro-card:hover .distro-icon {
+            filter: grayscale(0);
+        }
+
+        .distro-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .distro-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            background: rgba(87, 242, 135, 0.15);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: var(--success);
+        }
+
+        .distro-status i {
+            font-size: 0.7rem;
+        }
+
+        /* --- TROUBLESHOOTING --- */
+        .accordion {
+            max-width: 900px;
+            margin: 50px auto 0;
+        }
+
+        .accordion-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .accordion-item:hover {
+            border-color: var(--border-medium);
+        }
+
+        .accordion-header {
+            padding: 25px 30px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+
+        .accordion-header:hover {
+            color: var(--primary);
+        }
+
+        .accordion-icon {
+            transition: transform 0.3s;
+            color: var(--text-muted);
+        }
+
+        .accordion-item.active .accordion-icon {
+            transform: rotate(180deg);
+            color: var(--primary);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out;
+        }
+
+        .accordion-item.active .accordion-content {
+            max-height: 1000px;
+        }
+
+        .accordion-body {
+            padding: 0 30px 25px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .accordion-body code {
+            display: block;
+            background: var(--bg-darker);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 0.9rem;
+            color: var(--success);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .alert {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid;
+        }
+
+        .alert-warning {
+            background: rgba(254, 231, 92, 0.1);
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+
+        .alert-danger {
+            background: rgba(237, 66, 69, 0.1);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .alert-info {
+            background: rgba(88, 101, 242, 0.1);
+            border-color: var(--primary);
+            color: var(--primary-light);
+        }
+
+        .alert strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.05rem;
+        }
+
+        /* --- CTA SECTION --- */
+        .cta-section {
+            background: linear-gradient(135deg, rgba(88, 101, 242, 0.1) 0%, rgba(87, 242, 135, 0.05) 100%);
+            border-radius: 30px;
+            padding: 80px 40px;
+            text-align: center;
+            border: 1px solid var(--border-subtle);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(88, 101, 242, 0.1) 0%, transparent 70%);
+            animation: rotateBg 20s linear infinite;
+        }
+
+        @keyframes rotateBg {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .cta-section > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-section h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 35px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            padding: 80px 0 40px;
+            border-top: 1px solid var(--border-subtle);
+            margin-top: 100px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 60px;
+            margin-bottom: 50px;
+        }
+
+        .footer-brand {
+            max-width: 350px;
+        }
+
+        .footer-brand .logo {
+            margin-bottom: 20px;
+        }
+
+        .footer-brand p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 25px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-links a {
+            width: 45px;
+            height: 45px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+        }
+
+        .social-links a:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .footer-section h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            padding-top: 30px;
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .footer-bottom a {
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+
+        .footer-bottom a:hover {
+            color: var(--primary);
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1200px) {
+            .footer-content {
+                grid-template-columns: 1fr 1fr;
+                gap: 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: flex;
+            }
+
+            .nav-menu {
+                position: fixed;
+                top: 80px;
+                left: 0;
+                right: 0;
+                background: rgba(26, 28, 31, 0.98);
+                backdrop-filter: blur(20px);
+                flex-direction: column;
+                padding: 30px;
+                gap: 20px;
+                transform: translateY(-100%);
+                opacity: 0;
+                transition: all 0.3s;
+                border-bottom: 1px solid var(--border-subtle);
+            }
+
+            .nav-menu.active {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            .nav-cta {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .hero-cta {
+                flex-direction: column;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .step {
+                grid-template-columns: 60px 1fr;
+                gap: 20px;
+            }
+
+            .step-number {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+
+            .step:not(:last-child)::after {
+                left: 29px;
+                top: 60px;
+                height: calc(100% - 60px + 60px);
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .compatibility-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            .section {
+                padding: 60px 0;
+            }
+        }
+
+        /* --- SCROLL REVEAL ANIMATIONS --- */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- BADGE STYLES --- */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-success {
+            background: rgba(87, 242, 135, 0.15);
+            color: var(--success);
+        }
+
+        .badge-warning {
+            background: rgba(254, 231, 92, 0.15);
+            color: var(--warning);
+        }
+
+        .badge-info {
+            background: rgba(88, 101, 242, 0.15);
+            color: var(--primary-light);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Animated Background -->
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <a href="#" class="logo">
+                    <i class="fa-brands fa-discord"></i>
+                    <span>Discord Update</span>
+                </a>
+
+                <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="#features">Características</a></li>
+                    <li><a href="#how-it-works">Instalación</a></li>
+                    <li><a href="#compatibility">Compatibilidad</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                    <li><a href="https://github.com/retired64/discord-updater" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a></li>
+                    <div class="nav-cta">
+                        <a href="#download" class="btn btn-primary">
+                            <i class="fa-solid fa-download"></i> Descargar
+                        </a>
+                    </div>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fa-solid fa-circle"></i>
+                    <span>Open Source • MIT License</span>
+                </div>
+
+                <h1>
+                    Actualiza Discord en Linux.<br>
+                    <span class="text-gradient text-glow">Sin dolor.</span>
+                </h1>
+
+                <p class="subtitle">
+                    Olvídate de descomprimir archivos .tar.gz manualmente. Nuestro instalador detecta, descarga y actualiza Discord automáticamente con un solo clic. Diseñado para la comunidad Linux.
+                </p>
+
+                <div class="hero-cta" id="download">
+                    <a href="https://github.com/retired64/discord-updater/releases/download/v4.0/Discord_Updater-1.0-x86_64.AppImage" class="btn btn-primary">
+                        <i class="fa-solid fa-download"></i> Descargar AppImage
+                    </a>
+                    <a href="https://github.com/retired64/discord-updater" class="btn btn-secondary">
+                        <i class="fa-brands fa-github"></i> Ver Código Fuente
+                    </a>
+                    <a href="https://discord.com/invite/thuhUH2WNX" class="btn btn-ghost">
+                        <i class="fa-brands fa-discord"></i> Únete al Discord
+                    </a>
+                </div>
+
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">100%</span>
+                        <span class="stat-label">Open Source</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">5s</span>
+                        <span class="stat-label">Tiempo de actualización</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">0</span>
+                        <span class="stat-label">Configuración requerida</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="section">
+        <div class="container">
+            <div class="section-header reveal">
+                <h2 class="section-title">¿Por qué usar Discord Update?</h2>
+                <p class="section-description">
+                    Diseñado específicamente para resolver el problema más frustrante de Discord en Linux: las actualizaciones manuales.
+                </p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card reveal">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <h3>Detección Inteligente</h3>
+                    <p>Compara tu versión instalada con la API oficial de Discord. Si hay una actualización disponible, la detecta automáticamente y te avisa al instante.</p>
+                </div>
+
+                <div class="feature-card reveal">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-box-open"></i>
+                    </div>
+                    <h3>Formato AppImage</h3>
+                    <p>Portabilidad total. Un solo archivo ejecutable que funciona en cualquier distribución Linux sin dependencias externas ni instalación complicada.</p>
+                </div>
+
+                <div class="feature-card reveal">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h3>Seguro y Transparente</h3>
+                    <p>Código completamente abierto escrito en Python y PySide6. Sin scripts ocultos, todo el proceso ocurre en tu máquina local con total transparencia.</p>
+                </div>
+
+                <div class="feature-card reveal">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-gauge-high"></i>
+                    </div>
+                    <h3>Instalación Rápida</h3>
+                    <p>Actualiza Discord en menos de 5 segundos. Simplemente descarga, ejecuta y confirma. Sin comandos complejos, sin configuraciones tediosas.</p>
+                </div>
+
+                <div class="feature-card reveal">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-database"></i>
+                    </div>
+                    <h3>Preserva tus Datos</h3>
+                    <p>Tu configuración, servidores, mensajes y cache permanecen intactos. Solo actualizamos los binarios del sistema, nada más.</p>
+                </div>
+
+                <div class="feature-card reveal">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-code-branch"></i>
+                    </div>
+                    <h3>Integración con el Sistema</h3>
+                    <p>Actualiza enlaces simbólicos, iconos del menú de aplicaciones y base de datos del escritorio automáticamente. Todo queda perfectamente integrado.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="section" style="background: rgba(0,0,0,0.2);">
+        <div class="container">
+            <div class="section-header reveal">
+                <h2 class="section-title">Cómo funciona</h2>
+                <p class="section-description">
+                    Tres pasos simples para mantener Discord actualizado. Sin configuración, sin comandos complejos.
+                </p>
+            </div>
+
+            <div class="steps-container">
+                <div class="step reveal">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Descarga el instalador</h3>
+                        <p>
+                            Descarga el archivo <code>Discord_Updater-x86_64.AppImage</code> desde nuestros releases en GitHub. Es un archivo único y portable que no requiere instalación.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="step reveal">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Dale permisos y ejecuta</h3>
+                        <p>
+                            Asigna permisos de ejecución con <code>chmod +x Discord_Updater-x86_64.AppImage</code> y abre el programa con doble clic o desde la terminal. La interfaz gráfica se abrirá automáticamente.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="step reveal">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Actualiza con un clic</h3>
+                        <p>
+                            Si el sistema detecta una actualización disponible, presiona el botón azul <strong>"INSTALAR / ACTUALIZAR"</strong>. Se te pedirá tu contraseña de administrador para completar el proceso. ¡Y listo!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Compatibility Section -->
+    <section id="compatibility" class="section">
+        <div class="container">
+            <div class="section-header reveal">
+                <h2 class="section-title">Compatible con tus distros favoritas</h2>
+                <p class="section-description">
+                    Probado y funcionando en las distribuciones Linux más populares.
+                </p>
+            </div>
+
+            <div class="compatibility-grid">
+                <div class="distro-card reveal">
+                    <div class="distro-icon">🎩</div>
+                    <div class="distro-name">Fedora</div>
+                    <span class="distro-status">
+                        <i class="fa-solid fa-circle"></i> Compatible
+                    </span>
+                </div>
+
+                <div class="distro-card reveal">
+                    <div class="distro-icon">🏛️</div>
+                    <div class="distro-name">Arch Linux</div>
+                    <span class="distro-status">
+                        <i class="fa-solid fa-circle"></i> Compatible
+                    </span>
+                </div>
+
+                <div class="distro-card reveal">
+                    <div class="distro-icon">🌀</div>
+                    <div class="distro-name">Debian</div>
+                    <span class="distro-status">
+                        <i class="fa-solid fa-circle"></i> Compatible
+                    </span>
+                </div>
+
+                <div class="distro-card reveal">
+                    <div class="distro-icon">🎯</div>
+                    <div class="distro-name">Ubuntu</div>
+                    <span class="distro-status">
+                        <i class="fa-solid fa-circle"></i> Compatible
+                    </span>
+                </div>
+
+                <div class="distro-card reveal">
+                    <div class="distro-icon">🦎</div>
+                    <div class="distro-name">openSUSE</div>
+                    <span class="distro-status">
+                        <i class="fa-solid fa-circle"></i> Compatible
+                    </span>
+                </div>
+
+                <div class="distro-card reveal">
+                    <div class="distro-icon">🐧</div>
+                    <div class="distro-name">Linux Mint</div>
+                    <span class="distro-status">
+                        <i class="fa-solid fa-circle"></i> Compatible
+                    </span>
+                </div>
+            </div>
+
+            <div class="alert alert-warning reveal" style="max-width: 900px; margin: 50px auto 0;">
+                <strong><i class="fa-solid fa-triangle-exclamation"></i> Incompatibilidad con Sistemas Inmutables</strong>
+                Este instalador requiere acceso de escritura a directorios del sistema como <code>/opt</code> y <code>/usr/local/bin</code>. No es compatible con distribuciones inmutables como <strong>SteamOS</strong>, <strong>Fedora Silverblue/Kinoite</strong>, <strong>openSUSE MicroOS</strong> o <strong>NixOS</strong>. Para estos sistemas, usa la versión Flatpak de Discord.
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ / Troubleshooting -->
+    <section id="faq" class="section" style="background: rgba(0,0,0,0.2);">
+        <div class="container">
+            <div class="section-header reveal">
+                <h2 class="section-title">Preguntas Frecuentes</h2>
+                <p class="section-description">
+                    Soluciones a los problemas más comunes y respuestas a tus dudas.
+                </p>
+            </div>
+
+            <div class="accordion">
+                <div class="accordion-item reveal">
+                    <div class="accordion-header">
+                        <span>¿El instalador modifica mis datos de Discord?</span>
+                        <i class="fa-solid fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <p>
+                                <strong>No.</strong> El instalador solo reemplaza los binarios de Discord en rutas del sistema como <code>/opt/discord</code> o <code>/usr/share/discord</code>. 
+                                Todos tus datos personales (servidores, configuración, mensajes, cache) permanecen intactos en <code>~/.config/discord</code>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item reveal">
+                    <div class="accordion-header">
+                        <span>La AppImage no se ejecuta al hacer doble clic</span>
+                        <i class="fa-solid fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <p>Asegúrate de que el archivo tenga permisos de ejecución:</p>
+                            <code>chmod +x Discord_Updater-x86_64.AppImage</code>
+                            <p>Luego puedes ejecutarlo con doble clic o desde terminal:</p>
+                            <code>./Discord_Updater-x86_64.AppImage</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item reveal">
+                    <div class="accordion-header">
+                        <span>El instalador se queda "Cargando..." indefinidamente</span>
+                        <i class="fa-solid fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="alert alert-warning">
+                                <strong><i class="fa-solid fa-desktop"></i> Usuarios de Window Managers (i3, Sway, BSPWM)</strong>
+                                Este instalador utiliza <code>pkexec</code> para solicitar permisos de administrador de forma gráfica. 
+                                Si usas un WM minimalista, necesitas tener un agente de autenticación Polkit ejecutándose:
+                            </div>
+                            <p>Instala uno de estos agentes según tu escritorio:</p>
+                            <code>
+                                # GNOME-based<br>
+                                polkit-gnome-authentication-agent-1<br><br>
+                                # LXDE/LXQt<br>
+                                lxpolkit<br><br>
+                                # MATE<br>
+                                mate-polkit
+                            </code>
+                            <p>Y asegúrate de que se ejecute al iniciar sesión agregándolo a tu configuración de autostart.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item reveal">
+                    <div class="accordion-header">
+                        <span>Error en Gear Lever: "AppImage insegura o sin metadatos"</span>
+                        <i class="fa-solid fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <p>
+                                Esto es normal. Discord Update es una herramienta local sin firma digital corporativa. 
+                                Para integrarla en Gear Lever:
+                            </p>
+                            <ol style="margin-left: 20px; margin-top: 10px;">
+                                <li>Abre las preferencias de Gear Lever</li>
+                                <li>Ve a la sección de seguridad o validación</li>
+                                <li>Desactiva la verificación estricta de metadatos</li>
+                                <li>Vuelve a arrastrar el archivo para completar la integración</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item reveal">
+                    <div class="accordion-header">
+                        <span>¿Dónde puedo encontrar los logs de error?</span>
+                        <i class="fa-solid fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <p>
+                                Si la instalación falla, el instalador genera un registro detallado que puedes consultar o adjuntar al reportar un problema:
+                            </p>
+                            <code>~/.discord_installer.log</code>
+                            <p>Puedes ver el contenido del log con:</p>
+                            <code>cat ~/.discord_installer.log</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item reveal">
+                    <div class="accordion-header">
+                        <span>¿Qué dependencias necesita el sistema?</span>
+                        <i class="fa-solid fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <p>El script requiere las siguientes herramientas (normalmente ya instaladas):</p>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li><code>python3</code> con bibliotecas <code>PySide6</code> y <code>requests</code></li>
+                                <li><code>pkexec</code> (PolicyKit) para elevación de privilegios</li>
+                                <li><code>tar</code> para descompresión de archivos</li>
+                                <li><code>update-desktop-database</code> (paquete <code>desktop-file-utils</code>)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section">
+        <div class="container">
+            <div class="cta-section reveal">
+                <h2>Comienza a actualizar Discord sin esfuerzo</h2>
+                <p>
+                    Únete a miles de usuarios de Linux que ya disfrutan de actualizaciones automáticas y sin fricción.
+                </p>
+                <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+                    <a href="https://github.com/retired64/discord-updater/releases/download/v4.0/Discord_Updater-1.0-x86_64.AppImage" class="btn btn-primary">
+                        <i class="fa-solid fa-download"></i> Descargar AppImage
+                    </a>
+                    <a href="https://github.com/retired64/discord-updater" class="btn btn-secondary">
+                        <i class="fa-brands fa-github"></i> Ver en GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="#" class="logo">
+                        <i class="fa-brands fa-discord"></i>
+                        <span>Discord Update</span>
+                    </a>
+                    <p>
+                        Actualizador automático de Discord para Linux. Una herramienta de código abierto diseñada para eliminar la fricción de las actualizaciones manuales.
+                    </p>
+                    <div class="social-links">
+                        <a href="https://github.com/retired64/discord-updater" aria-label="GitHub">
+                            <i class="fa-brands fa-github"></i>
+                        </a>
+                        <a href="https://youtube.com/@retired64" aria-label="YouTube">
+                            <i class="fa-brands fa-youtube"></i>
+                        </a>
+                        <a href="https://discord.com/invite/thuhUH2WNX" aria-label="Discord">
+                            <i class="fa-brands fa-discord"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Producto</h4>
+                    <ul class="footer-links">
+                        <li><a href="#features">Características</a></li>
+                        <li><a href="#how-it-works">Cómo funciona</a></li>
+                        <li><a href="#compatibility">Compatibilidad</a></li>
+                        <li><a href="#faq">FAQ</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Recursos</h4>
+                    <ul class="footer-links">
+                        <li><a href="https://github.com/retired64/discord-updater">Código Fuente</a></li>
+                        <li><a href="https://github.com/retired64/discord-updater/releases">Descargas</a></li>
+                        <li><a href="https://github.com/retired64/discord-updater/issues">Reportar Bug</a></li>
+                        <li><a href="https://github.com/retired64/discord-updater/blob/main/LICENSE">Licencia MIT</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Comunidad</h4>
+                    <ul class="footer-links">
+                        <li><a href="https://discord.com/invite/thuhUH2WNX">Discord Server</a></li>
+                        <li><a href="https://youtube.com/@retired64">YouTube</a></li>
+                        <li><a href="https://github.com/retired64/discord-updater/discussions">Discusiones</a></li>
+                        <li><a href="https://github.com/retired64/discord-updater/blob/main/CONTRIBUTING.md">Contribuir</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div>
+                    <p>
+                        © 2026 Discord Update. No afiliado oficialmente con Discord Inc.<br>
+                        Desarrollado con ❤️ por <a href="https://github.com/retired64"><strong>Retired64</strong></a> para la comunidad Linux.
+                    </p>
+                </div>
+                <div>
+                    <a href="https://github.com/retired64/discord-updater/blob/main/LICENSE">Licencia MIT</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+        
+        menuToggle.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+            menuToggle.classList.toggle('active');
+        });
+
+        // Close menu when clicking a link
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+                menuToggle.classList.remove('active');
+            });
+        });
+
+        // Accordion functionality
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const item = header.parentElement;
+                const wasActive = item.classList.contains('active');
+                
+                // Close all accordion items
+                document.querySelectorAll('.accordion-item').forEach(accordionItem => {
+                    accordionItem.classList.remove('active');
+                });
+                
+                // Open clicked item if it wasn't active
+                if (!wasActive) {
+                    item.classList.add('active');
+                }
+            });
+        });
+
+        // Scroll reveal animation
+        const revealElements = document.querySelectorAll('.reveal');
+        
+        const revealOnScroll = () => {
+            const windowHeight = window.innerHeight;
+            
+            revealElements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const revealPoint = 100;
+                
+                if (elementTop < windowHeight - revealPoint) {
+                    element.classList.add('active');
+                }
+            });
+        };
+
+        window.addEventListener('scroll', revealOnScroll);
+        revealOnScroll(); // Initial check
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href !== '#') {
+                    e.preventDefault();
+                    const target = document.querySelector(href);
+                    if (target) {
+                        const offsetTop = target.offsetTop - 100;
+                        window.scrollTo({
+                            top: offsetTop,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
