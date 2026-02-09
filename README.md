@@ -190,7 +190,7 @@ Para integrarla correctamente:
 <img width="465" height="259" alt="Captura desde 2026-02-09 10-58-44" src="https://github.com/user-attachments/assets/23166410-2ba2-4be5-88cf-8db288fae978" />
 
 ## SOLUCION
-- Desactivar esta opcion (tal vez a futuro actualice correctamente los metadatos para actualizaciones automaticas dentro del mismo appimage y firmado, mientras esta es una solucion temporal)
+- INgresa a preferencias de GearLever, Desactivar esta opcion (tal vez a futuro actualice correctamente los metadatos para actualizaciones automaticas dentro del mismo appimage y firmado, mientras esta es una solucion temporal)
 <img width="627" height="146" alt="Captura desde 2026-02-09 10-55-15" src="https://github.com/user-attachments/assets/1005b6b9-6340-4167-b562-d16fe64fd050" />
 
 
