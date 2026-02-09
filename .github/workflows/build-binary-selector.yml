@@ -1,0 +1,153 @@
+name: Build Discord Updater Binary
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+        type: string
+      
+      python_file:
+        description: 'Archivo Python a compilar'
+        required: true
+        type: choice
+        options:
+          - discord_installer.py
+          - discord-updater-desktop.py
+          - test_installer.py
+        default: 'discord_installer.py'
+      
+      binary_name:
+        description: 'Nombre del binario final (sin extensión)'
+        required: false
+        default: 'discord-updater'
+        type: string
+      
+      include_console:
+        description: '¿Mostrar consola al ejecutar?'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build on Ubuntu
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Build with PyInstaller
+        run: |
+          # Configurar flags según inputs
+          WINDOWED_FLAG=""
+          if [ "${{ inputs.include_console }}" == "false" ]; then
+            WINDOWED_FLAG="--windowed"
+          fi
+          
+          # Determinar nombre del binario
+          BINARY_NAME="${{ inputs.binary_name }}"
+          if [ -z "$BINARY_NAME" ]; then
+            # Si está vacío, usar el nombre del archivo sin extensión
+            BINARY_NAME=$(basename "${{ inputs.python_file }}" .py)
+          fi
+          
+          echo "Compilando: ${{ inputs.python_file }}"
+          echo "Nombre binario: $BINARY_NAME"
+          echo "Modo ventana: ${{ inputs.include_console }}"
+          
+          pyinstaller \
+            --noconfirm \
+            --onefile \
+            $WINDOWED_FLAG \
+            --clean \
+            --name "$BINARY_NAME" \
+            "${{ inputs.python_file }}"
+
+      - name: Verify Build
+        run: |
+          echo "=== Contenido de dist/ ==="
+          ls -lh dist/
+          echo ""
+          echo "=== Información del binario ==="
+          BINARY_NAME="${{ inputs.binary_name }}"
+          if [ -z "$BINARY_NAME" ]; then
+            BINARY_NAME=$(basename "${{ inputs.python_file }}" .py)
+          fi
+          file "dist/$BINARY_NAME"
+          echo ""
+          echo "=== Tamaño ==="
+          du -h "dist/$BINARY_NAME"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.binary_name }}-${{ inputs.version }}
+          path: dist/*
+          retention-days: 30
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: ${{ inputs.version }}
+          name: Discord Updater ${{ inputs.version }}
+          draft: false
+          prerelease: false
+          files: dist/*
+          body: |
+            ## 🚀 Discord Installer Pro ${{ inputs.version }}
+            
+            ### 📦 Archivo compilado
+            - **Archivo fuente:** `${{ inputs.python_file }}`
+            - **Binario:** `${{ inputs.binary_name }}`
+            - **Fecha:** ${{ github.event.head_commit.timestamp }}
+            
+            ### 💻 Instalación en Linux
+            
+            ```bash
+            # 1. Descargar el binario
+            wget https://github.com/${{ github.repository }}/releases/download/${{ inputs.version }}/${{ inputs.binary_name }}
+            
+            # 2. Dar permisos de ejecución
+            chmod +x ${{ inputs.binary_name }}
+            
+            # 3. Ejecutar
+            ./${{ inputs.binary_name }}
+            ```
+            
+            ### 📋 Requisitos del Sistema
+            - Linux (Ubuntu 20.04+, Fedora 35+, Arch, etc.)
+            - PolicyKit (pkexec) instalado
+            - 500 MB de espacio libre
+            
+            ### 🆕 Características
+            - ✅ Descarga automática de Discord
+            - ✅ Instalación con un solo clic
+            - ✅ Detección automática de versiones
+            - ✅ Actualización de instalaciones existentes
+            
+            ---
+            
+            **Compilado con:** PyInstaller  
+            **Python:** 3.10  
+            **Plataforma:** Ubuntu Latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
