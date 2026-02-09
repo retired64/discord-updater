@@ -1,55 +1,55 @@
-# DiscordUpdate-TarGZ
-Herramienta para actualizar la version tar de discord en linux para ser mostrada en el menu de aplicaciones desktop
-¡Me parece perfecto! Una aplicación genial no sirve de mucho si el usuario no sabe cómo usarla. Aquí tienes una guía lista para copiar y pegar.
-Discord Updater para Linux
+<div align="center">
+  <img src="icon.png" alt="Discord Updater Logo" width="120" height="120">
+  
+  # DiscordUpdate-TarGZ
+  
+  **Actualizador automático para la versión tar.gz de Discord en Linux.**
+  <br>
+  
+  ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
+  ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+  ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-**Guía de Uso Rápida**
+</div>
 
-### ¿Qué es esto?
 
-Es una pequeña herramienta que automatiza la instalación manual de Discord en Linux.
-Si usas Discord en Fedora o Arch, etc. sabes que cuando sale una actualización, la aplicación se bloquea cuando la descargaste y usas desde el sitio oficial descargado el tar.gz y esta desactualizado, no es como hacer un sudo dnf/apt install discord o upgrade discord. Te pide descargar un archivo `.tar.gz`. Instalar ese archivo manualmente es tedioso. **Esta aplicación lo hace por ti con un solo clic.**
+### ¿Por qué existe esto?
 
----
+Si usas Linux (Fedora, Arch, Debian, etc.), conoces el dolor: sale una actualización de Discord, la aplicación se bloquea y te obliga a descargar un archivo `.tar.gz`. Los repositorios oficiales (`dnf`, `apt`, `pacman`) suelen tardar días en actualizarse, y la versión Flatpak ocupa mucho espacio.
 
-### Requisitos Previos
-
-Solo necesitas una cosa antes de abrir la aplicación:
-
-1. Ve a la página oficial de Discord o haz clic en el aviso de actualización de tu Discord actual.
-2. Descarga la versión para Linux **tar.gz**.
-3. **¡IMPORTANTE!** Deja el archivo en tu carpeta de **Descargas** (Downloads). No lo descomprimas ni le cambies el nombre.
-
----
-
-### 🛠️ Cómo usarlo (Paso a Paso)
-
-**1. Abre el Actualizador**
-Haz doble clic en el archivo `DiscordUpdater` (o ejecútalo desde tu terminal).
-
-**2. Verificación Automática**
-Verás una ventana moderna.
-
-* ✅ **Si el texto está en VERDE:** Significa que la aplicación encontró el archivo de actualización en tus Descargas.
-* ❌ **Si el texto está en ROJO:** No se encontró el archivo `.tar.gz`. Revisa que lo hayas descargado correctamente en la carpeta *Descargas*.
-
-**3. Instalar**
-Presiona el botón azul **"INSTALAR / ACTUALIZAR"**.
-
-**4. Permisos de Administrador**
-Te aparecerá una ventana del sistema pidiéndote tu **contraseña de usuario**.
-
-> *¿Por qué?* Discord se instala en las carpetas del sistema (`/usr/share`), por lo que necesitamos permisos especiales para copiar los archivos allí. Es totalmente seguro.
-
-**5. ¡Listo!**
-Una vez termine (tarda unos segundos), verás un mensaje de éxito. Ya puedes abrir Discord normalmente desde tu menú de aplicaciones con la nueva versión instalada.
+Instalar el `tar.gz` manualmente cada vez (extraer, mover a `/opt`, actualizar enlaces) es tedioso. **Esta herramienta detecta el archivo descargado y actualiza tu instalación del sistema con un solo clic.**
 
 ---
 
-### ❓ Preguntas Frecuentes
+### Requisitos
 
-* **¿Borrará mis datos de Discord?**
-No. Solo actualiza el programa. Tu inicio de sesión, servidores y configuraciones se mantienen intactos.
-* **Hago doble clic y no se abre.**
-Asegúrate de que el archivo tenga permisos de ejecución.
-* *Clic derecho -> Propiedades -> Permisos -> Marcar "Permitir ejecutar el archivo como un programa".*
+1. Tener **Discord** instalado (o querer instalarlo).
+2. Descargar la actualización oficial (`discord-x.x.x.tar.gz`) desde la web de Discord.
+3. **Importante:** Dejar el archivo en tu carpeta de **Descargas** (`~/Downloads` o `~/Descargas`).
+
+---
+
+### 🛠️ Cómo usarlo
+
+1. **Descarga la actualización:** Cuando Discord te pida actualizar, baja el `.tar.gz` y déjalo en Descargas.
+2. **Ejecuta el Actualizador:** Abre `DiscordUpdater` (doble clic o desde terminal).
+3. **Verificación:**
+   - 🟢 **Verde:** Archivo detectado correctamente.
+   - 🔴 **Rojo:** No se encontró el `.tar.gz` en Descargas.
+4. **Instalar:** Presiona **"INSTALAR / ACTUALIZAR"**.
+5. **Autenticación:** El sistema te pedirá tu contraseña de usuario (usa `pkexec` para permisos seguros de root).
+
+> **Nota:** La instalación toma solo unos segundos. Al finalizar, recibirás una notificación de éxito.
+
+---
+
+### ❓ FAQ
+
+**¿Borrará mis datos o servidores?**
+No. La herramienta solo reemplaza los binarios del sistema en `/usr/share/discord` (o `/opt`). Tu configuración de usuario (`~/.config/discord`) se mantiene intacta.
+
+**La AppImage no abre al hacer doble clic**
+Asegúrate de que el archivo tenga permisos de ejecución:
+```bash
+chmod +x DiscordUpdater-x86_64.AppImage
+```
