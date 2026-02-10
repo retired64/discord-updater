@@ -731,31 +731,6 @@ class ModernButton(QPushButton):
         super().setEnabled(enabled)
         self._update_style()
 
-
-class DiscordIcon(QLabel):
-    """Widget personalizado para el icono de Discord"""
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setFixedSize(120, 120)
-        self.setScaledContents(False)
-    
-    def paintEvent(self, event):
-        """Dibuja el icono de Discord"""
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        
-        # Fondo circular
-        painter.setBrush(QColor("#5865F2"))
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawEllipse(10, 10, 100, 100)
-        
-        # Logo simplificado (texto)
-        painter.setPen(QColor("#FFFFFF"))
-        painter.setFont(QFont("Arial", 48, QFont.Weight.Bold))
-        painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "D")
-
-
 class DiscordInstallerUI(QMainWindow):
     """Interfaz gráfica principal del instalador"""
     
@@ -847,22 +822,12 @@ class DiscordInstallerUI(QMainWindow):
         title.setStyleSheet("color: #5865F2; margin-bottom: 5px;")
         layout.addWidget(title)
         
-        subtitle = QLabel("INSTALLER PRO")
+        subtitle = QLabel("INSTALLER")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitle.setFont(QFont("Segoe UI", 16, QFont.Weight.Light))
         subtitle.setStyleSheet("color: #B9BBBE; margin-bottom: 20px;")
         layout.addWidget(subtitle)
-        
-        # Icono
-        self.icon = DiscordIcon()
-        icon_layout = QHBoxLayout()
-        icon_layout.addStretch()
-        icon_layout.addWidget(self.icon)
-        icon_layout.addStretch()
-        layout.addLayout(icon_layout)
-        
-        layout.addSpacing(10)
-        
+
         # Selector de modo
         mode_label = QLabel("Modo de instalación:")
         mode_label.setStyleSheet("color: #B9BBBE; font-size: 11px;")
@@ -1265,10 +1230,10 @@ class DiscordInstallerUI(QMainWindow):
     def _show_help(self):
         """Muestra diálogo de ayuda"""
         help_text = f"""
-        <h2>Discord Installer Pro v{Config.APP_VERSION}</h2>
+        <h2>Discord Installerv{Config.APP_VERSION}</h2>
         <p><b>Instalador profesional para Discord en Linux</b></p>
         
-        <h3>🆕 Nuevo en v4.0:</h3>
+        <h3>Nuevo en v4.0:</h3>
         <ul>
             <li><b>Descarga automática</b> desde servidores de Discord</li>
             <li>Detección de última versión disponible</li>
