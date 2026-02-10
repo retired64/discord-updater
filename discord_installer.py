@@ -1262,7 +1262,6 @@ class DiscordInstallerUI(QMainWindow):
             <li>Logs: {Config.LOG_FILE}</li>
         </ul>
         
-        <p><i>Desarrollado con ❤️ por Claude AI</i></p>
         """
         
         msg = QMessageBox(self)
