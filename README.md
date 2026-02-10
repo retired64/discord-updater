@@ -14,6 +14,12 @@ Una herramienta diseñada para integrar y mantener Discord actualizado en el sis
 
 ![Discord Update](src/img/logo.png)
 
+
+https://github.com/user-attachments/assets/51c6d83f-dcab-4ffa-aa78-d9537da708a4
+
+
+
+
 <div align="center">
 
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge\&logo=linux\&logoColor=black)
